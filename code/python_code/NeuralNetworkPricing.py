@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import json
+import os
 from scipy.interpolate import CubicSpline
+
+path_separator = os.path.sep
 
 def elu(x):
 # Implements the elu activation function.
@@ -41,7 +44,7 @@ class NeuralNetwork:
     
 class NeuralNetworkPricer:    
 # Implements a neural network pricer based on multiple sub networks.
-    def __init__(self,contracts_folder,weights_folder,model_name):
+    def __init__(self,contracts_folder,weights_folder,model_name, optimizer):
     # Constructor.
         self.nn = []
         self.idx_in = []
@@ -51,8 +54,8 @@ class NeuralNetworkPricer:
         self.label = model_name
         
         # Load contract grid:
-        self.T = np.loadtxt(contracts_folder + "\\expiries.txt").reshape(-1,1)
-        self.k = np.loadtxt(contracts_folder + "\\logMoneyness.txt").reshape(-1,1)
+        self.T = np.loadtxt(contracts_folder + path_separator + "expiries.txt").reshape(-1, 1)
+        self.k = np.loadtxt(contracts_folder + path_separator + "logMoneyness.txt").reshape(-1, 1)
         
         # Set the forward variance curve grid points (in case relevant):
         Txi = np.concatenate((np.arange(0.0025,0.0175,0.0025),
@@ -62,17 +65,18 @@ class NeuralNetworkPricer:
                               np.array([3])))
         
         # Basic naming of json files:
-        json_files = ["_weights_1.json",
-                      "_weights_2.json",
-                      "_weights_3.json",
-                      "_weights_4.json",
-                      "_weights_5.json",
-                      "_weights_6.json"]
+        json_files = ["_weights_1_" + optimizer + ".json",
+                      # "_weights_2_" + optimizer + ".json",
+                      # "_weights_3_" + optimizer + ".json",
+                      # "_weights_4_" + optimizer + ".json",
+                      # "_weights_5_" + optimizer + ".json",
+                      # "_weights_6_" + optimizer + ".json"
+                      ]
 
         # Load each sub-network:
         idxOutStart = 0
         for i in range(len(json_files)):
-            self.nn.append(NeuralNetwork(weights_folder + "\\" + model_name + json_files[i]))
+            self.nn.append(NeuralNetwork(weights_folder + path_separator + model_name + json_files[i]))
             self.idx_in.append(np.arange(0,self.nn[i].scaleMeanIn.shape[0]))
             idxOutEnd = idxOutStart + self.nn[i].scaleMeanOut.shape[0]
             self.idx_out.append(np.arange(idxOutStart,idxOutEnd))
